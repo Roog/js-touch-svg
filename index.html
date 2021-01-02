@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <title></title>
+        <style type="text/css">
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        </style>
+    </head>
+    <body>
+
+<!--
+    SVG Info
+    - d -> path data
+    - d:m -> moveto accepts (x,y)+ m: relative coordinates
+    - d:M -> moveto accepts (x,y)+ M: absolute coordinates
+    - d:l -> lineto accepts (x,y)+ l: relative coordinates
+    - d:L -> lineto accepts (x,y)+ L: absolute coordinates
+    - d:h -> horizontal lineto accepts (x)+ h: relative coordinates
+    - d:H -> horizontal lineto accepts (x)+ H: absolute coordinates
+    - d:v -> vertical lineto accepts (y)+ v: relative coordinates
+    - d:V -> vertical lineto accepts (y)+ V: absolute coordinates
+    - d:z -> indicates a closepath
+    - d:s -> curvature
+
+
+Cubic Bézier commands (C, c, S and s). A cubic Bézier segment is defined by a start point, an end point, and two control points.
+Quadratic Bézier commands (Q, q, T and t). A quadratic Bézier segment is defined by a start point, an end point, and one control point.
+Elliptical arc commands (A and a). An elliptical arc segment draws a segment of an ellipse.
+
+-->
+
+<svg
+    id="svg-container"
+    height="100%"
+    width="100%"
+    style="height:100%; background: lightblue;"
+    xmlns="http://ww.s3.org/2000/svg">
+        <g
+            fill="none"
+            fill-rule="evenodd">
+            <path
+                d="
+                M 0,100
+                S 100,100 200,50
+                S 400,100 500,100
+                "
+                stroke="#979797"
+                stroke-linecap="round"
+                stroke-width="2"
+                id="help-path" />
+            <circle
+                cx="200"
+                cy="50"
+                fill="#00ff00"
+                r="7"
+                id="handle" />
+            <circle
+                cx="500"
+                cy="100"
+                fill="#00ff00"
+                r="7"
+                id="handle2" />
+        </g>
+</svg>
+
+<!--<svg
+    id="svg-container"
+    height="100%"
+    width="100%"
+    style="height:100%; background: lightblue;"
+    xmlns="http://ww.s3.org/2000/svg">
+        <g
+            fill="none"
+            fill-rule="evenodd">
+            <path
+                d="
+                M 0,100
+                C 100,100 150,90 200,20
+                L 400,40
+                "
+                stroke="#979797"
+                stroke-linecap="round"
+                stroke-width="2"
+                id="help-path" />
+            <circle
+                cx="100"
+                cy="100"
+                fill="#00ff00"
+                r="7"
+                id="handle2" />
+            <circle
+                cx="150"
+                cy="90"
+                fill="#0000ff"
+                r="7"
+                id="handle3" />
+            <circle
+                cx="200"
+                cy="20"
+                fill="#00ffff"
+                r="7"
+                id="handle4" />
+            <circle
+                cx="400"
+                cy="40"
+                fill="#ff0000"
+                r="7"
+                id="handle" />
+        </g>
+</svg>-->
+
+<script>
+window.onload = addListeners();
+
+var START_X = 0,
+    CENTER_Y = 100,
+    x1 = 200,
+    y1 = 50,
+    q_x1_bend = 50,
+    x2 = 500,
+    y2 = 100,
+    q_x2_bend = 50,
+    SELECTEDITEM = document.createElementNS(null, "circle", "");
+
+function addListeners(){
+    document.getElementById('handle').addEventListener('mousedown', mouseDown, false);
+    document.getElementById('handle2').addEventListener('mousedown', mouseDown, false);
+
+    window.addEventListener('mouseup', mouseUp, false);
+}
+
+function mouseUp(e){
+    document.getElementById(SELECTEDITEM.target.id).setAttributeNS(null, "fill", "#00ff00");
+    document.getElementById(SELECTEDITEM.target.id).setAttributeNS(null, "r", "7");
+    window.removeEventListener('mousemove', divMove, true);
+}
+
+function mouseDown(e){
+    SELECTEDITEM = e;
+    document.getElementById(SELECTEDITEM.target.id).setAttributeNS(null, "fill", "#fff5ff");
+    document.getElementById(SELECTEDITEM.target.id).setAttributeNS(null, "r", "15");
+    window.addEventListener('mousemove', divMove, true);
+}
+
+function divMove(e){
+    console.log(SELECTEDITEM.target.id);
+
+    if(SELECTEDITEM.target.id == "handle")
+    {
+        x1 = e.clientX;
+        y1 = e.clientY;
+    }
+    else if(SELECTEDITEM.target.id == "handle2")
+    {
+        x2 = e.clientX;
+        y2 = e.clientY;
+    }
+
+    let svgContainer = document.getElementById("svg-container").getBoundingClientRect()
+
+    x1 = x1 < 0 ? 0 : x1;
+    x1 = x1 > svgContainer.width ? svgContainer.width : x1;
+
+    x2 = x2 < 0 ? 0 : x2;
+    x2 = x2 > svgContainer.width ? svgContainer.width : x2;
+
+    y1 = y1 < 0 ? 0 : y1;
+    y1 = y1 > svgContainer.height ? svgContainer.height : y1;
+
+    y2 = y2 < 0 ? 0 : y2;
+    y2 = y2 > svgContainer.height ? svgContainer.height : y2;
+
+    setHandleOnPath();
+
+    //var y = path.getAttributeNS(null, 'd');
+    // if (e.targetTouches.length == 2 && e.changedTouches.length == 2) {
+    //     console.dir(e);
+    // }
+}
+
+function setHandleOnPath()
+{
+    document.getElementById("handle").setAttributeNS(null, 'cx', x1);
+    document.getElementById("handle").setAttributeNS(null, 'cy', y1);
+
+    document.getElementById("handle2").setAttributeNS(null, 'cx', x2);
+    document.getElementById("handle2").setAttributeNS(null, 'cy', y2);
+
+    var q_x1_value = x1 - q_x1_bend;
+    var q_x2_value = x2 - q_x2_bend;
+    var mod = ` m ${START_X},${CENTER_Y}
+                S ${q_x1_value},${y1} ${x1},${y1}
+                S ${q_x2_value},${y2} ${x2},${y2}`;
+    document.getElementById('help-path').setAttributeNS(null, 'd', mod);
+}
+
+// Modifies the Q-value / curve width
+window.onwheel = function (e) {
+    //e.preventDefault();
+    const delta = Math.sign(event.deltaY);
+    console.info(delta); // + scrollUp, - scrollDown
+
+    if(SELECTEDITEM.target.id == "handle")
+    {
+        q_x1_bend = delta < 0 ? q_x1_bend + 5 : q_x1_bend - 5;
+        q_x1_bend = q_x1_bend <= 0 ? 0 : q_x1_bend; // min
+        q_x1_bend = q_x1_bend >= 100 ? 100 : q_x1_bend; // max
+    }
+    else if(SELECTEDITEM.target.id == "handle2")
+    {
+        q_x2_bend = delta < 0 ? q_x2_bend + 5 : q_x2_bend - 5;
+        q_x2_bend = q_x2_bend <= 0 ? 0 : q_x2_bend; // min
+        q_x2_bend = q_x2_bend >= 100 ? 100 : q_x2_bend; // max
+    }
+
+    setHandleOnPath();
+};
+
+/*
+    var mod2 = `
+                m ${START_X},${CENTER_Y}
+                S ${(x - START_X) * 0.5},${y}
+                ${x},${y}
+                `;*/
+
+</script>
+
+
+    </body>
+</html>
